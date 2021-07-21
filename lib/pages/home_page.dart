@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:band_names/services/socket_service.dart';
@@ -14,12 +15,29 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Band> bands = [
-    Band(id: '1', name: 'Metallica', votes: 5),
-    Band(id: '2', name: 'Héroes del Silencio', votes: 0),
-    Band(id: '3', name: 'Queen', votes: 9),
-    Band(id: '4', name: 'AC/DC', votes: 8),
-    Band(id: '5', name: 'Kiss', votes: 4),
+    // Band(id: '1', name: 'Metallica', votes: 5),
+    // Band(id: '2', name: 'Héroes del Silencio', votes: 0),
+    // Band(id: '3', name: 'Queen', votes: 9),
+    // Band(id: '4', name: 'AC/DC', votes: 8),
+    // Band(id: '5', name: 'Kiss', votes: 4),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final socketService = Provider.of<SocketService>(context, listen: false);
+    socketService.socket.on('active-bands', (data) {
+      this.bands = (data as List).map((band) => Band.fromJson(band)).toList();
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    final socketService = Provider.of<SocketService>(context, listen: false);
+    socketService.socket.off('active-bands');
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
