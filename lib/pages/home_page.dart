@@ -78,34 +78,43 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _bandTile(Band band) => Dismissible(
-        key: Key(band.id),
-        direction: DismissDirection.startToEnd,
-        background: Container(
-          padding: const EdgeInsets.only(left: 10),
-          color: Colors.red,
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Delete band',
-              style: TextStyle(color: Colors.white),
-            ),
+  Widget _bandTile(Band band) {
+    final socketService = Provider.of<SocketService>(context, listen: false);
+
+    return Dismissible(
+      key: Key(band.id),
+      direction: DismissDirection.startToEnd,
+      background: Container(
+        padding: const EdgeInsets.only(left: 10),
+        color: Colors.red,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Delete band',
+            style: TextStyle(color: Colors.white),
           ),
         ),
-        onDismissed: (direction) {},
-        child: ListTile(
-          leading: CircleAvatar(
-            child: Text(band.name.substring(0, 2)),
-            backgroundColor: Colors.blue[100],
-          ),
-          title: Text(band.name),
-          trailing: Text(
-            "${band.votes}",
-            style: TextStyle(fontSize: 20),
-          ),
-          onTap: () {},
+      ),
+      onDismissed: (direction) {},
+      child: ListTile(
+        leading: CircleAvatar(
+          child: Text(band.name.substring(0, 2)),
+          backgroundColor: Colors.blue[100],
         ),
-      );
+        title: Text(band.name),
+        trailing: Text(
+          "${band.votes}",
+          style: TextStyle(fontSize: 20),
+        ),
+        onTap: () {
+          print(band.name);
+          socketService.socket.emit('vote-band', {
+            'id': band.id,
+          });
+        },
+      ),
+    );
+  }
 
   void _addNewBand() {
     final textController = TextEditingController();
