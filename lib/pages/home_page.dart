@@ -95,7 +95,11 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      onDismissed: (direction) {},
+      onDismissed: (direction) {
+        socketService.emit('delete-band', {
+          'id': band.id,
+        });
+      },
       child: ListTile(
         leading: CircleAvatar(
           child: Text(band.name.substring(0, 2)),
