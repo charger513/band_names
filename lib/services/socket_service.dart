@@ -18,7 +18,7 @@ class SocketService with ChangeNotifier {
 
   void _initConfig() {
     _socket = IO.io(
-      'http://localhost:3000',
+      'https://flutter-socket-server-ch.herokuapp.com/',
       OptionBuilder().setTransports(['websocket']).build(),
     );
     _socket.onConnect((_) {
