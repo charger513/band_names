@@ -170,14 +170,10 @@ class _HomePageState extends State<HomePage> {
 
   void _addBandToList(String name) {
     if (name.length > 1) {
-      this.bands.add(
-            Band(
-              id: DateTime.now().toString(),
-              name: name,
-              votes: 0,
-            ),
-          );
-      setState(() {});
+      final socketService = Provider.of<SocketService>(context, listen: false);
+      socketService.socket.emit('add-band', {
+        'name': name,
+      });
     }
 
     Navigator.pop(context);
