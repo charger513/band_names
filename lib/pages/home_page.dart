@@ -1,12 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:band_names/services/socket_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:pie_chart/pie_chart.dart';
 import 'package:provider/provider.dart';
 
 import '../models/band.dart';
+import '../services/socket_service.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -26,10 +26,12 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     final socketService = Provider.of<SocketService>(context, listen: false);
-    socketService.socket.on('active-bands', (data) {
-      this.bands = (data as List).map((band) => Band.fromJson(band)).toList();
-      setState(() {});
-    });
+    socketService.socket.on('active-bands', _handleActiveBands);
+  }
+
+  _handleActiveBands(dynamic payload) {
+    this.bands = (payload as List).map((band) => Band.fromJson(band)).toList();
+    setState(() {});
   }
 
   @override
@@ -66,9 +68,16 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: bands.length,
-        itemBuilder: (context, index) => _bandTile(bands[index]),
+      body: Column(
+        children: [
+          _showGraph(),
+          Expanded(
+            child: ListView.builder(
+              itemCount: bands.length,
+              itemBuilder: (context, index) => _bandTile(bands[index]),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
@@ -95,11 +104,9 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      onDismissed: (direction) {
-        socketService.emit('delete-band', {
-          'id': band.id,
-        });
-      },
+      onDismissed: (direction) => socketService.emit('delete-band', {
+        'id': band.id,
+      }),
       child: ListTile(
         leading: CircleAvatar(
           child: Text(band.name.substring(0, 2)),
@@ -147,28 +154,26 @@ class _HomePageState extends State<HomePage> {
 
     showCupertinoDialog(
       context: context,
-      builder: (ctx) {
-        return CupertinoAlertDialog(
-          title: Text('New Band name:'),
-          content: CupertinoTextField(
-            controller: textController,
+      builder: (ctx) => CupertinoAlertDialog(
+        title: Text('New Band name:'),
+        content: CupertinoTextField(
+          controller: textController,
+        ),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: Text('Add'),
+            onPressed: () => _addBandToList(textController.text),
           ),
-          actions: [
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              child: Text('Add'),
-              onPressed: () => _addBandToList(textController.text),
-            ),
-            CupertinoDialogAction(
-              isDestructiveAction: true,
-              child: Text('Dismiss'),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        );
-      },
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            child: Text('Dismiss'),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -181,5 +186,30 @@ class _HomePageState extends State<HomePage> {
     }
 
     Navigator.pop(context);
+  }
+
+  Widget _showGraph() {
+    Map<String, double> dataMap = {};
+    bands.forEach((band) {
+      dataMap[band.name] = band.votes.toDouble();
+    });
+
+    return Container(
+      width: double.infinity,
+      height: 200,
+      child: PieChart(
+        dataMap: dataMap,
+        chartType: ChartType.disc,
+        ringStrokeWidth: 10,
+        centerText: "BANDS",
+        chartValuesOptions: ChartValuesOptions(
+          showChartValueBackground: true,
+          showChartValues: true,
+          showChartValuesInPercentage: false,
+          showChartValuesOutside: false,
+          decimalPlaces: 0,
+        ),
+      ),
+    );
   }
 }
